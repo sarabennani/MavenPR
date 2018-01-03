@@ -1,10 +1,8 @@
-node {
-    def app
-
-    stage('Clone repository') {
-        /* Let's make sure we have the repository cloned to our workspace */
-
-        checkout scm
+pipeline {
+    agent any
+    tools {
+        maven 'Maven3'
+        jdk 'jdk1.8.0_101'
     }
 
      stage ('Build') {
