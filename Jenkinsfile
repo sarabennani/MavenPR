@@ -4,10 +4,10 @@ pipeline {
         maven 'Maven3'
         jdk 'jdk1.8.0_101'
     }
-
-     stage ('Build') {
+    stages {
+	    stage ('Build') {
             steps {
-		        bat 'mvn install'
+		bat 'mvn install'
             }
             post {
                 success {
@@ -41,4 +41,6 @@ pipeline {
 		}
 		
 	}
+	
+     }
 }
