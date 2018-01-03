@@ -7,30 +7,40 @@ node {
         checkout scm
     }
 
-    stage('Build image') {
-        /* This builds the actual image; synonymous to
-         * docker build on the command line */
-
-        app = docker.build("getintodevops/hellonode")
-    }
-
-    stage('Test image') {
-        /* Ideally, we would run a test framework against our image.
-         * For this example, we're using a Volkswagen-type approach ;-) */
-
-        app.inside {
-            bat 'echo "Tests passed"'
+     stage ('Build') {
+            steps {
+		        bat 'mvn install'
+            }
+            post {
+                success {
+                    junit 'target/surefire-reports/*.xml' 
+                }
+            }
         }
-    }
-
-    stage('Push image') {
-        /* Finally, we'll push the image with two tags:
-         * First, the incremental build number from Jenkins
-         * Second, the 'latest' tag.
-         * Pushing multiple tags is cheap, as all the layers are reused. */
-        docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-            app.push("${env.BUILD_NUMBER}")
-            app.push("latest")
-        }
-    }
+	stage('cobrtr'){
+		steps{
+			bat 'mvn cobertura:cobertura -Dcobertura.report.format=xml'
+		}
+		post{
+			success {
+				step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'target/site/cobertura/*.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
+			}
+		}
+	}
+	stage('jvdoc'){
+		steps{
+			bat 'mvn javadoc:javadoc'
+		}
+		post{
+			success {
+				step([$class: 'JavadocArchiver', javadocDir: 'target/site/apidocs', keepAll: false])
+			}
+		}
+	}
+	stage('package'){
+		steps{
+			bat 'mvn package'
+		}
+		
+	}
 }
